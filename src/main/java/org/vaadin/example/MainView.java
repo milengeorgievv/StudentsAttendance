@@ -88,7 +88,7 @@ public class MainView extends VerticalLayout {
         horizontal1.add(field,field1,field2);
         List<Integer> frequency = new ArrayList<>();
         Grid<Frequency> grid = new Grid<>();
-        grid.setSizeFull();
+        //grid.setSizeFull();
         grid.addColumn(Frequency::getExercises).setHeader("Number of Exercises");
         grid.addColumn(Frequency::getAbsoluteFrequency).setHeader("Absolute frequency");
         grid.addColumn(Frequency::getRelativeFrequency).setHeader("Relative frequency");
@@ -97,12 +97,21 @@ public class MainView extends VerticalLayout {
         button.addClickListener(buttonClickEvent -> {
             switch(labelSelect.getValue()) {
                 case "Frequency distribution":
-                    //1
-                    getFrequencyDistributionValues(studentActivityRepository); //2
-                    //3
-                    //setColumns  1 - 2 - 3
+                    List<Frequency> frequencies = new ArrayList<>();
+                    int[] absoluteFrequencies = getFrequencyDistributionValues(studentActivityRepository); //2
+                    int sumOfFrequencies = 0;
+                    for (int absFreq: absoluteFrequencies) {
+                        sumOfFrequencies+=absFreq;
+                    }
+                    for(int i = 0; i < 5;i++) {
+                        Frequency currFrequency = new Frequency(
+                                i+1,
+                                absoluteFrequencies[i],
+                                ((double)absoluteFrequencies[i]/sumOfFrequencies)*100);
+                        frequencies.add(currFrequency);
+                    }
 
-                    grid.setItems();
+                    grid.setItems(frequencies);
                     break;
                 case "Measures of the central trend":
                     break;
