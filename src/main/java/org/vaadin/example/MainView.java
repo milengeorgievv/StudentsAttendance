@@ -10,6 +10,7 @@ import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.Route;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.vaadin.example.dao.PlatformRepository;
 import org.vaadin.example.dao.StudentActivityRepository;
 import org.vaadin.example.dao.StudentResultRepository;
+import org.vaadin.example.entity.PlatformEntity;
 import org.vaadin.example.entity.StudentActivityEntity;
 import org.vaadin.example.entity.StudentResultEntity;
 
@@ -48,10 +50,6 @@ public class MainView extends VerticalLayout {
         //upload.setAcceptedFileTypes("text/csv");
         Div output = new Div();
 
-        upload.addFileRejectedListener(event -> {
-            Paragraph component = new Paragraph();
-            //showOutput(event.getErrorMessage(), component, output);
-        });
         upload.getElement().addEventListener("file-remove", event -> {
             output.removeAll();
         });
@@ -63,32 +61,46 @@ public class MainView extends VerticalLayout {
 
 
         Select<String> labelSelect = new Select<>();
-        labelSelect.setItems("Frequency distribution", "Measures of the central trend", "Distraction measures", "Correlation analysis");
+        labelSelect.setItems("Frequency distribution", "Measures of the central trend", "Distraction measures", "Correlation analysis","Summarizing information");
         labelSelect.setLabel("Select an option: ");
 
         Button button = new Button("Calculate");
         Button button1 = new Button("Clear all");
 
-        button.addClickListener(buttonClickEvent -> {
-
-
-        });
-
-        Div line = new Div();
-        line.getStyle().set("width", "100%").set("border-top", "1px solid grey");
-
         HorizontalLayout horizontal = new HorizontalLayout();
         horizontal.add(button, button1);
 
+        TextField field = new TextField();
+        field.setLabel("Subject name");
+        TextField field1 = new TextField();
+        field1.setLabel("Platform name");
+        TextField field2 = new TextField();
+        field2.setLabel("URL address");
+        Button buttonSubmit = new Button("Submit");
+
+        buttonSubmit.addClickListener(buttonClickEvent -> {
+            PlatformEntity pl = new PlatformEntity(field.getValue(), field1.getValue(), field2.getValue());
+            platformRepository.save(pl);
+
+        });
+
+        HorizontalLayout horizontal1 = new HorizontalLayout();
+        horizontal1.add(field,field1,field2);
+
+
         Label empty = new Label("");
+        empty.setHeight("1em");
+        Label empty1 = new Label("");
         empty.setHeight("1em");
 
         add(title);
         add(empty);
         add(upload, output);
+        add(horizontal1);
+        add(buttonSubmit);
+        add(empty1);
         add(labelSelect);
         add(horizontal);
-        add(line);
     }
 
     private void createSpreadsheet(MemoryBuffer buffer, StudentActivityRepository studentActivityRepository,
