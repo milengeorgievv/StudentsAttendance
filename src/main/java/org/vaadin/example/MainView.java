@@ -45,7 +45,9 @@ public class MainView extends VerticalLayout {
     public MainView(@Autowired GreetService service, PlatformRepository platformRepository,
                     StudentActivityRepository studentActivityRepository, StudentResultRepository studentResultRepository) {
         Html title = new Html("<span style=\"font-size: 30px; font-family: Cursive;\">Data analysis for e-learning management</span>");
-
+        platformRepository.deleteAll();
+        studentActivityRepository.deleteAll();
+        studentResultRepository.deleteAll();
         MemoryBuffer buffer = new MemoryBuffer();
         Upload upload = new Upload(buffer);
         upload.setMaxFiles(10);
