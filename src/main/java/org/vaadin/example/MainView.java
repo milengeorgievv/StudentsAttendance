@@ -29,6 +29,7 @@ import org.vaadin.example.entity.StudentResultEntity;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -54,15 +55,14 @@ public class MainView extends VerticalLayout {
         upload.getElement().addEventListener("file-remove", event -> {
             output.removeAll();
         });
-        upload.addFinishedListener(event ->{
+        upload.addFinishedListener(event -> {
             createSpreadsheet(buffer, studentActivityRepository, studentResultRepository);
 
         });
 
 
-
         Select<String> labelSelect = new Select<>();
-        labelSelect.setItems("Frequency distribution", "Measures of the central trend", "Distraction measures", "Correlation analysis","Summarizing information");
+        labelSelect.setItems("Frequency distribution", "Measures of the central trend", "Distraction measures", "Correlation analysis", "Summarizing information");
         labelSelect.setLabel("Select an option: ");
 
         Button button = new Button("Calculate");
@@ -85,7 +85,8 @@ public class MainView extends VerticalLayout {
         });
 
         HorizontalLayout horizontal1 = new HorizontalLayout();
-        horizontal1.add(field,field1,field2);
+        horizontal1.add(field, field1, field2);
+
         List<Integer> frequency = new ArrayList<>();
         Grid<Frequency> grid = new Grid<>();
         //grid.setSizeFull();
@@ -94,8 +95,15 @@ public class MainView extends VerticalLayout {
         grid.addColumn(Frequency::getRelativeFrequency).setHeader("Relative frequency");
         grid.setPageSize(20);
 
+        List<Integer> centralTrend = new ArrayList<>();
+        Grid<CentralTrend> gridCentralTrend = new Grid<>();
+        gridCentralTrend.addColumn(CentralTrend::getMode).setHeader("Mode");
+        gridCentralTrend.addColumn(CentralTrend::getMedian).setHeader("Median");
+        gridCentralTrend.addColumn(CentralTrend::getAverage).setHeader("Average");
+
+
         button.addClickListener(buttonClickEvent -> {
-            switch(labelSelect.getValue()) {
+            switch (labelSelect.getValue()) {
                 case "Frequency distribution":
                     List<Frequency> frequencies = new ArrayList<>();
                     int[] absoluteFrequencies = getFrequencyDistributionValues(studentActivityRepository); //2
@@ -114,6 +122,43 @@ public class MainView extends VerticalLayout {
                     grid.setItems(frequencies);
                     break;
                 case "Measures of the central trend":
+                    List<CentralTrend> listCentral = new ArrayList<>();
+                    int[] array = getFrequencyDistributionValues(studentActivityRepository);
+                    int mode = 0;
+                    int sum = 0;
+
+                    int totalCount = 0;
+                    int currCount = 0;
+                    Arrays.sort(array);
+
+
+                    if (array[0] < 2 && array[1] < 2 && array[2] < 2 && array[3] < 2 && array[4] < 2) {
+                        mode = 0;
+                    } else {
+                        for(int i=0; i<4;i++){
+                            if(array[i]==array[i+1]){
+                                currCount++;
+                            }else{
+                                if(totalCount<currCount) {
+                                    totalCount = currCount;
+                                    mode = array[i];
+                                }
+                                currCount=0;
+                            }
+                        }
+                        if(totalCount<currCount) {
+                            mode = array[4];
+                        }
+                    }
+
+                    Arrays.sort(array);
+
+                    for (int i = 0; i < 5; i++) {
+                        sum += array[i];
+                    }
+
+                    CentralTrend trend = new CentralTrend(mode, array[2], sum / 5.0);
+                    gridCentralTrend.setItems(trend);
                     break;
                 case "Distraction measures":
                     break;
@@ -123,7 +168,6 @@ public class MainView extends VerticalLayout {
                     break;
             }
         });
-
 
 
         Label empty = new Label("");
@@ -140,33 +184,36 @@ public class MainView extends VerticalLayout {
         add(labelSelect);
         add(horizontal);
         add(grid);
+        add(gridCentralTrend);
     }
 
+
     private int[] getFrequencyDistributionValues(StudentActivityRepository studentActivityRepository) {
-        int[] frequency = {0,0,0,0,0};
+        int[] frequency = {0, 0, 0, 0, 0};
         List<Integer> values = studentActivityRepository.findFrequencyDistributionValues();
-        for(int i = 0; i< values.size();i++) {
+        for (int i = 0; i < values.size(); i++) {
             switch (values.get(i)) {
                 case 1:
-                    frequency[0]+=1;
+                    frequency[0] += 1;
                     break;
                 case 2:
-                    frequency[1]+=1;
+                    frequency[1] += 1;
                     break;
                 case 3:
-                    frequency[2]+=1;
+                    frequency[2] += 1;
                     break;
                 case 4:
-                    frequency[3]+=1;
+                    frequency[3] += 1;
                     break;
                 case 5:
-                    frequency[4]+=1;
+                    frequency[4] += 1;
                     break;
             }
         }
         return frequency;
 
     }
+
 
     private void createSpreadsheet(MemoryBuffer buffer, StudentActivityRepository studentActivityRepository,
                                    StudentResultRepository studentResultRepository) {
@@ -185,22 +232,22 @@ public class MainView extends VerticalLayout {
             String component = "";
             String eventName = "";
             String description = "";
-            while(rowIterator.hasNext()) {
+            while (rowIterator.hasNext()) {
                 Row row = rowIterator.next();
                 Iterator<Cell> cellIterator = row.cellIterator();
                 int columnIndex = 0;
                 while (cellIterator.hasNext()) {
                     Cell cell = cellIterator.next();
-                    if(rowIndex == 0 && columnIndex == 0) {
-                        if(cell.getStringCellValue().equals("Time")) {
+                    if (rowIndex == 0 && columnIndex == 0) {
+                        if (cell.getStringCellValue().equals("Time")) {
                             isStudentsActivity = true;
-                        } else if(cell.getStringCellValue().equals("ID")) {
+                        } else if (cell.getStringCellValue().equals("ID")) {
                             isStudentsResults = true;
                         } else {
                             //error
                         }
                     }
-                    if(isStudentsActivity) {
+                    if (isStudentsActivity) {
                         switch (columnIndex) {
                             case 0:
                                 time = cell.getStringCellValue();
@@ -218,23 +265,23 @@ public class MainView extends VerticalLayout {
                                 description = cell.getStringCellValue();
                                 break;
                         }
-                    } else if(isStudentsResults) {
+                    } else if (isStudentsResults) {
                         switch (columnIndex) {
                             case 0:
                                 cell.setCellType(CellType.NUMERIC);
-                                ID = (int)cell.getNumericCellValue();
+                                ID = (int) cell.getNumericCellValue();
                                 break;
                             case 1:
                                 cell.setCellType(CellType.NUMERIC);
-                                result = (float)cell.getNumericCellValue();
+                                result = (float) cell.getNumericCellValue();
                                 break;
                         }
                     }
-                    if(!cellIterator.hasNext()) {
-                        if(isStudentsActivity && rowIndex!=0) {
+                    if (!cellIterator.hasNext()) {
+                        if (isStudentsActivity && rowIndex != 0) {
                             StudentActivityEntity sae = new StudentActivityEntity(time, eventContext, component, eventName, description);
                             studentActivityRepository.save(sae);
-                        } else if(isStudentsResults && rowIndex!=0) {
+                        } else if (isStudentsResults && rowIndex != 0) {
                             StudentResultEntity sre = new StudentResultEntity(ID, result);
                             studentResultRepository.save(sre);
                         }
@@ -248,7 +295,6 @@ public class MainView extends VerticalLayout {
             e.printStackTrace();
         }
     }
-
 
 
 }
