@@ -4,9 +4,9 @@ import com.vaadin.addon.spreadsheet.Spreadsheet;
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
-import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -28,7 +28,9 @@ import org.vaadin.example.entity.StudentActivityEntity;
 import org.vaadin.example.entity.StudentResultEntity;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 @Route
 @PWA(name = "Vaadin Application",
@@ -47,7 +49,6 @@ public class MainView extends VerticalLayout {
         Upload upload = new Upload(buffer);
         upload.setMaxFiles(10);
         upload.setDropLabel(new Label("Upload up to 10 files in .xlsx format"));
-        //upload.setAcceptedFileTypes("text/csv");
         Div output = new Div();
 
         upload.getElement().addEventListener("file-remove", event -> {
@@ -81,11 +82,39 @@ public class MainView extends VerticalLayout {
         buttonSubmit.addClickListener(buttonClickEvent -> {
             PlatformEntity pl = new PlatformEntity(field.getValue(), field1.getValue(), field2.getValue());
             platformRepository.save(pl);
-
         });
 
         HorizontalLayout horizontal1 = new HorizontalLayout();
         horizontal1.add(field,field1,field2);
+        List<Integer> frequency = new ArrayList<>();
+        Grid<Frequency> grid = new Grid<>();
+        grid.setSizeFull();
+        grid.addColumn(Frequency::getExercises).setHeader("Number of Exercises");
+        grid.addColumn(Frequency::getAbsoluteFrequency).setHeader("Absolute frequency");
+        grid.addColumn(Frequency::getRelativeFrequency).setHeader("Relative frequency");
+        grid.setPageSize(20);
+
+        button.addClickListener(buttonClickEvent -> {
+            switch(labelSelect.getValue()) {
+                case "Frequency distribution":
+                    //1
+                    getFrequencyDistributionValues(studentActivityRepository); //2
+                    //3
+                    //setColumns  1 - 2 - 3
+
+                    grid.setItems();
+                    break;
+                case "Measures of the central trend":
+                    break;
+                case "Distraction measures":
+                    break;
+                case "Correlation analysis":
+                    break;
+                case "Summarizing information":
+                    break;
+            }
+        });
+
 
 
         Label empty = new Label("");
@@ -101,6 +130,33 @@ public class MainView extends VerticalLayout {
         add(empty1);
         add(labelSelect);
         add(horizontal);
+        add(grid);
+    }
+
+    private int[] getFrequencyDistributionValues(StudentActivityRepository studentActivityRepository) {
+        int[] frequency = {0,0,0,0,0};
+        List<Integer> values = studentActivityRepository.findFrequencyDistributionValues();
+        for(int i = 0; i< values.size();i++) {
+            switch (values.get(i)) {
+                case 1:
+                    frequency[0]+=1;
+                    break;
+                case 2:
+                    frequency[1]+=1;
+                    break;
+                case 3:
+                    frequency[2]+=1;
+                    break;
+                case 4:
+                    frequency[3]+=1;
+                    break;
+                case 5:
+                    frequency[4]+=1;
+                    break;
+            }
+        }
+        return frequency;
+
     }
 
     private void createSpreadsheet(MemoryBuffer buffer, StudentActivityRepository studentActivityRepository,
@@ -183,5 +239,7 @@ public class MainView extends VerticalLayout {
             e.printStackTrace();
         }
     }
+
+
 
 }
