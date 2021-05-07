@@ -1,34 +1,31 @@
 package org.vaadin.example;
 
+import com.vaadin.addon.spreadsheet.Spreadsheet;
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
-import com.vaadin.flow.internal.MessageDigestUtil;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
-import com.vaadin.flow.server.StreamResource;
-import org.apache.commons.io.IOUtils;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.vaadin.example.dao.PlatformRepository;
+import org.vaadin.example.dao.StudentActivityRepository;
+import org.vaadin.example.dao.StudentResultRepository;
+import org.vaadin.example.entity.StudentActivityEntity;
+import org.vaadin.example.entity.StudentResultEntity;
 
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.*;
 import java.util.Iterator;
 
 @Route
@@ -40,22 +37,27 @@ import java.util.Iterator;
 @CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
 public class MainView extends VerticalLayout {
 
-    public MainView(@Autowired GreetService service) {
+    public MainView(@Autowired GreetService service, PlatformRepository platformRepository,
+                    StudentActivityRepository studentActivityRepository, StudentResultRepository studentResultRepository) {
         Html title = new Html("<span style=\"font-size: 30px; font-family: Cursive;\">Data analysis for e-learning management</span>");
 
         MemoryBuffer buffer = new MemoryBuffer();
         Upload upload = new Upload(buffer);
-        upload.setMaxFiles(3);
-        upload.setDropLabel(new Label("Upload up to 3 files in .xlsx format"));
-        upload.setAcceptedFileTypes("xlsx");
+        upload.setMaxFiles(10);
+        upload.setDropLabel(new Label("Upload up to 10 files in .xlsx format"));
+        //upload.setAcceptedFileTypes("text/csv");
         Div output = new Div();
 
         upload.addFileRejectedListener(event -> {
             Paragraph component = new Paragraph();
-            showOutput(event.getErrorMessage(), component, output);
+            //showOutput(event.getErrorMessage(), component, output);
         });
         upload.getElement().addEventListener("file-remove", event -> {
             output.removeAll();
+        });
+        upload.addFinishedListener(event ->{
+            createSpreadsheet(buffer, studentActivityRepository, studentResultRepository);
+
         });
 
 
@@ -89,62 +91,85 @@ public class MainView extends VerticalLayout {
         add(line);
     }
 
-    private Component createComponent(String mimeType, String fileName,
-                                      InputStream stream) {
-        if (mimeType.startsWith("text")) {
-            return createTextComponent(stream);
-        } else if (mimeType.startsWith("image")) {
-            Image image = new Image();
-            try {
-
-                byte[] bytes = IOUtils.toByteArray(stream);
-                image.getElement().setAttribute("src", new StreamResource(
-                        fileName, () -> new ByteArrayInputStream(bytes)));
-                try (ImageInputStream in = ImageIO.createImageInputStream(
-                        new ByteArrayInputStream(bytes))) {
-                    final Iterator<ImageReader> readers = ImageIO
-                            .getImageReaders(in);
-                    if (readers.hasNext()) {
-                        ImageReader reader = readers.next();
-                        try {
-                            reader.setInput(in);
-                            image.setWidth(reader.getWidth(0) + "px");
-                            image.setHeight(reader.getHeight(0) + "px");
-                        } finally {
-                            reader.dispose();
+    private void createSpreadsheet(MemoryBuffer buffer, StudentActivityRepository studentActivityRepository,
+                                   StudentResultRepository studentResultRepository) {
+        InputStream inputStream = buffer.getInputStream();
+        try {
+            Spreadsheet spreadsheet = new Spreadsheet(inputStream);
+            Sheet sheet = spreadsheet.getWorkbook().getSheetAt(0);
+            Iterator<Row> rowIterator = sheet.iterator();
+            int rowIndex = 0;
+            boolean isStudentsResults = false;
+            long ID = 0;
+            float result = 0;
+            boolean isStudentsActivity = false;
+            String time = "";
+            String eventContext = "";
+            String component = "";
+            String eventName = "";
+            String description = "";
+            while(rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+                Iterator<Cell> cellIterator = row.cellIterator();
+                int columnIndex = 0;
+                while (cellIterator.hasNext()) {
+                    Cell cell = cellIterator.next();
+                    if(rowIndex == 0 && columnIndex == 0) {
+                        if(cell.getStringCellValue().equals("Time")) {
+                            isStudentsActivity = true;
+                        } else if(cell.getStringCellValue().equals("ID")) {
+                            isStudentsResults = true;
+                        } else {
+                            //error
                         }
                     }
+                    if(isStudentsActivity) {
+                        switch (columnIndex) {
+                            case 0:
+                                time = cell.getStringCellValue();
+                                break;
+                            case 1:
+                                eventContext = cell.getStringCellValue();
+                                break;
+                            case 2:
+                                component = cell.getStringCellValue();
+                                break;
+                            case 3:
+                                eventName = cell.getStringCellValue();
+                                break;
+                            case 4:
+                                description = cell.getStringCellValue();
+                                break;
+                        }
+                    } else if(isStudentsResults) {
+                        switch (columnIndex) {
+                            case 0:
+                                cell.setCellType(CellType.NUMERIC);
+                                ID = (int)cell.getNumericCellValue();
+                                break;
+                            case 1:
+                                cell.setCellType(CellType.NUMERIC);
+                                result = (float)cell.getNumericCellValue();
+                                break;
+                        }
+                    }
+                    if(!cellIterator.hasNext()) {
+                        if(isStudentsActivity && rowIndex!=0) {
+                            StudentActivityEntity sae = new StudentActivityEntity(time, eventContext, component, eventName, description);
+                            studentActivityRepository.save(sae);
+                        } else if(isStudentsResults && rowIndex!=0) {
+                            StudentResultEntity sre = new StudentResultEntity(ID, result);
+                            studentResultRepository.save(sre);
+                        }
+                    }
+
+                    columnIndex++;
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+                rowIndex++;
             }
-            image.setSizeFull();
-            return image;
-        }
-        Div content = new Div();
-        String text = String.format("Mime type: '%s'\nSHA-256 hash: '%s'",
-                mimeType, MessageDigestUtil.sha256(stream.toString()));
-        content.setText(text);
-        return content;
-
-    }
-
-    private Component createTextComponent(InputStream stream) {
-        String text;
-        try {
-            text = IOUtils.toString(stream, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            text = "exception reading stream";
+            e.printStackTrace();
         }
-        return new Text(text);
-    }
-
-    private void showOutput(String text, Component content,
-                            HasComponents outputContainer) {
-        HtmlComponent p = new HtmlComponent(Tag.P);
-        p.getElement().setText(text);
-        outputContainer.add(p);
-        outputContainer.add(content);
     }
 
 }
