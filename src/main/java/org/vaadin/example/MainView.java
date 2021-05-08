@@ -94,11 +94,11 @@ public class MainView extends VerticalLayout {
         Grid<Frequency> grid = new Grid<>();
         //grid.setSizeFull();
         grid.addColumn(Frequency::getExercises).setHeader("Number of Exercises");
-        grid.addColumn(Frequency::getAbsoluteFrequency).setHeader("Absolute frequency");
-        grid.addColumn(Frequency::getRelativeFrequency).setHeader("Relative frequency");
+        grid.addColumn(Frequency::getAbsoluteFrequency).setHeader("Absolute frequency f");
+        grid.addColumn(Frequency::getRelativeFrequency).setHeader("Relative frequency p (In %)");
         grid.setPageSize(20);
         grid.setHeightByRows(true);
-        grid.setWidth("600px");
+        grid.setWidth("700px");
 
         List<Integer> centralTrend = new ArrayList<>();
         Grid<CentralTrend> gridCentralTrend = new Grid<>();
@@ -106,14 +106,14 @@ public class MainView extends VerticalLayout {
         gridCentralTrend.addColumn(CentralTrend::getMedian).setHeader("Median");
         gridCentralTrend.addColumn(CentralTrend::getAverage).setHeader("Average");
         gridCentralTrend.setHeightByRows(true);
-        gridCentralTrend.setWidth("600px");
+        gridCentralTrend.setWidth("700px");
 
 
         button.addClickListener(buttonClickEvent -> {
             switch (labelSelect.getValue()) {
                 case "Frequency distribution":
                     List<Frequency> frequencies = new ArrayList<>();
-                    int[] absoluteFrequencies = getFrequencyDistributionValues(studentActivityRepository); //2
+                    int[] absoluteFrequencies = getFrequencyDistributionValues(studentActivityRepository);
                     int sumOfFrequencies = 0;
                     for (int absFreq : absoluteFrequencies) {
                         sumOfFrequencies += absFreq;
