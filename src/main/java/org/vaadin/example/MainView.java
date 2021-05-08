@@ -85,6 +85,9 @@ public class MainView extends VerticalLayout {
         buttonSubmit.addClickListener(buttonClickEvent -> {
             PlatformEntity pl = new PlatformEntity(field.getValue(), field1.getValue(), field2.getValue());
             platformRepository.save(pl);
+            field.setValue("");
+            field1.setValue("");
+            field2.setValue("");
         });
 
         HorizontalLayout horizontal1 = new HorizontalLayout();
@@ -94,11 +97,11 @@ public class MainView extends VerticalLayout {
         Grid<Frequency> grid = new Grid<>();
         //grid.setSizeFull();
         grid.addColumn(Frequency::getExercises).setHeader("Number of Exercises");
-        grid.addColumn(Frequency::getAbsoluteFrequency).setHeader("Absolute frequency");
-        grid.addColumn(Frequency::getRelativeFrequency).setHeader("Relative frequency");
+        grid.addColumn(Frequency::getAbsoluteFrequency).setHeader("Absolute frequency f");
+        grid.addColumn(Frequency::getRelativeFrequency).setHeader("Relative frequency p (In %)");
         grid.setPageSize(20);
         grid.setHeightByRows(true);
-        grid.setWidth("600px");
+        grid.setWidth("700px");
 
         List<Integer> centralTrend = new ArrayList<>();
         Grid<CentralTrend> gridCentralTrend = new Grid<>();
@@ -106,7 +109,7 @@ public class MainView extends VerticalLayout {
         gridCentralTrend.addColumn(CentralTrend::getMedian).setHeader("Median");
         gridCentralTrend.addColumn(CentralTrend::getAverage).setHeader("Average");
         gridCentralTrend.setHeightByRows(true);
-        gridCentralTrend.setWidth("600px");
+        gridCentralTrend.setWidth("700px");
 
 
         button.addClickListener(buttonClickEvent -> {
