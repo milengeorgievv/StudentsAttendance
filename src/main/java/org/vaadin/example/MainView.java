@@ -85,6 +85,9 @@ public class MainView extends VerticalLayout {
         buttonSubmit.addClickListener(buttonClickEvent -> {
             PlatformEntity pl = new PlatformEntity(field.getValue(), field1.getValue(), field2.getValue());
             platformRepository.save(pl);
+            field.setValue("");
+            field1.setValue("");
+            field2.setValue("");
         });
 
         HorizontalLayout horizontal1 = new HorizontalLayout();
