@@ -15,6 +15,7 @@ import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
+import org.apache.commons.math3.util.Precision;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -96,12 +97,16 @@ public class MainView extends VerticalLayout {
         grid.addColumn(Frequency::getAbsoluteFrequency).setHeader("Absolute frequency");
         grid.addColumn(Frequency::getRelativeFrequency).setHeader("Relative frequency");
         grid.setPageSize(20);
+        grid.setHeightByRows(true);
+        grid.setWidth("600px");
 
         List<Integer> centralTrend = new ArrayList<>();
         Grid<CentralTrend> gridCentralTrend = new Grid<>();
         gridCentralTrend.addColumn(CentralTrend::getMode).setHeader("Mode");
         gridCentralTrend.addColumn(CentralTrend::getMedian).setHeader("Median");
         gridCentralTrend.addColumn(CentralTrend::getAverage).setHeader("Average");
+        gridCentralTrend.setHeightByRows(true);
+        gridCentralTrend.setWidth("600px");
 
 
         button.addClickListener(buttonClickEvent -> {
@@ -110,14 +115,14 @@ public class MainView extends VerticalLayout {
                     List<Frequency> frequencies = new ArrayList<>();
                     int[] absoluteFrequencies = getFrequencyDistributionValues(studentActivityRepository); //2
                     int sumOfFrequencies = 0;
-                    for (int absFreq: absoluteFrequencies) {
-                        sumOfFrequencies+=absFreq;
+                    for (int absFreq : absoluteFrequencies) {
+                        sumOfFrequencies += absFreq;
                     }
-                    for(int i = 0; i < 5;i++) {
+                    for (int i = 0; i < 5; i++) {
                         Frequency currFrequency = new Frequency(
-                                i+1,
+                                i + 1,
                                 absoluteFrequencies[i],
-                                ((double)absoluteFrequencies[i]/sumOfFrequencies)*100);
+                                Precision.round((((double) absoluteFrequencies[i] / sumOfFrequencies) * 100),2));
                         frequencies.add(currFrequency);
                     }
 
@@ -137,18 +142,18 @@ public class MainView extends VerticalLayout {
                     if (array[0] < 2 && array[1] < 2 && array[2] < 2 && array[3] < 2 && array[4] < 2) {
                         mode = 0;
                     } else {
-                        for(int i=0; i<4;i++){
-                            if(array[i]==array[i+1]){
+                        for (int i = 0; i < 4; i++) {
+                            if (array[i] == array[i + 1]) {
                                 currCount++;
-                            }else{
-                                if(totalCount<currCount) {
+                            } else {
+                                if (totalCount < currCount) {
                                     totalCount = currCount;
                                     mode = array[i];
                                 }
-                                currCount=0;
+                                currCount = 0;
                             }
                         }
-                        if(totalCount<currCount) {
+                        if (totalCount < currCount) {
                             mode = array[4];
                         }
                     }
