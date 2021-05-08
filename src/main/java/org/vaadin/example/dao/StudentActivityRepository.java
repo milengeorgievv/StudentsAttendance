@@ -12,5 +12,5 @@ public interface StudentActivityRepository extends JpaRepository<StudentActivity
             "AND event_name LIKE '%A file has been uploaded.%'\n" +
             "GROUP BY SUBSTRING(description,0, 25)",
             nativeQuery = true)
-    List<Integer> findFrequencyDistributionValues();
+    List<Integer> getAnalysisValues();
 }

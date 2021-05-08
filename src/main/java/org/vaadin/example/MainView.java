@@ -20,7 +20,6 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.vaadin.example.dao.PlatformRepository;
 import org.vaadin.example.dao.StudentActivityRepository;
 import org.vaadin.example.dao.StudentResultRepository;
@@ -200,7 +199,7 @@ public class MainView extends VerticalLayout {
 
     private int[] getAnalysisValues(StudentActivityRepository studentActivityRepository) {
         int[] frequency = {0, 0, 0, 0, 0};
-        List<Integer> values = studentActivityRepository.findFrequencyDistributionValues();
+        List<Integer> values = studentActivityRepository.getAnalysisValues();
         for (int i = 0; i < values.size(); i++) {
             switch (values.get(i)) {
                 case 1:
