@@ -43,7 +43,7 @@ import java.util.List;
 @CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
 public class MainView extends VerticalLayout {
 
-    public MainView(@Autowired GreetService service, PlatformRepository platformRepository,
+    public MainView(PlatformRepository platformRepository,
                     StudentActivityRepository studentActivityRepository, StudentResultRepository studentResultRepository) {
         Html title = new Html("<span style=\"font-size: 30px; font-family: Cursive;\">Data analysis for e-learning management</span>");
         platformRepository.deleteAll();
@@ -113,7 +113,7 @@ public class MainView extends VerticalLayout {
             switch (labelSelect.getValue()) {
                 case "Frequency distribution":
                     List<Frequency> frequencies = new ArrayList<>();
-                    int[] absoluteFrequencies = getFrequencyDistributionValues(studentActivityRepository); //2
+                    int[] absoluteFrequencies = getAnalysisValues(studentActivityRepository); //2
                     int sumOfFrequencies = 0;
                     for (int absFreq : absoluteFrequencies) {
                         sumOfFrequencies += absFreq;
@@ -130,7 +130,7 @@ public class MainView extends VerticalLayout {
                     break;
                 case "Measures of the central trend":
                     List<CentralTrend> listCentral = new ArrayList<>();
-                    int[] array = getFrequencyDistributionValues(studentActivityRepository);
+                    int[] array = getAnalysisValues(studentActivityRepository);
                     int mode = 0;
                     int sum = 0;
 
@@ -195,7 +195,7 @@ public class MainView extends VerticalLayout {
     }
 
 
-    private int[] getFrequencyDistributionValues(StudentActivityRepository studentActivityRepository) {
+    private int[] getAnalysisValues(StudentActivityRepository studentActivityRepository) {
         int[] frequency = {0, 0, 0, 0, 0};
         List<Integer> values = studentActivityRepository.findFrequencyDistributionValues();
         for (int i = 0; i < values.size(); i++) {
